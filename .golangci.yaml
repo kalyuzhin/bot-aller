@@ -1,0 +1,169 @@
+# More info on config here: https://golangci-lint.run/usage/configuration/#config-file
+run:
+  timeout: 10m
+  issues-exit-code: 1
+  tests: true
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  cyclop:
+    max-complexity: 10
+  gocognit:
+    min-complexity: 10
+  nolintlint:
+    allow-unused: true
+  govet:
+    shadow: true
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  tagliatelle:
+    case:
+      rules:
+        json: snake
+        yaml: snake
+  exhaustive:
+    # Presence of "default" case in switch statements satisfies exhaustiveness,
+    # even if all enum members are not listed.
+    # Default: false
+    default-signifies-exhaustive: true
+
+linters:
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - cyclop
+    - decorder
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - copyloopvar
+    #    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gci
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    - gochecknoinits
+    - gochecksumtype
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godox
+    - gofmt
+    - gofumpt
+    - goheader
+    - goimports
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - gosmopolitan
+    - govet
+    - grouper
+    - importas
+    - inamedparam
+    - ineffassign
+    - interfacebloat
+    - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - mirror
+    - misspell
+    - mnd
+    - musttag
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nonamedreturns
+    - nosprintfhostport
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - protogetter
+    - reassign
+    - revive
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+    - staticcheck
+    - stylecheck
+    - tagalign
+    - tagliatelle
+    - tenv
+    - testableexamples
+    - testifylint
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - zerologlint
+  disable-all: true
+
+issues:
+  exclude-use-default: false
+  exclude-generated: lax
+  exclude-files:
+    - \.pb\.go$
+    - \.pb\.gw\.go$
+    - \.pb\.scratch\.go$
+    - \.pb\.goclay\.go$
+    - _mock\.go$
+    - config/config.go$
+  exclude-dirs:
+    - bin
+    - vendor
+    - var
+    - tmp
+    - .cache
+    - tests/e2e
+  exclude-rules:
+    # disable funlen for all _test.go files
+    - path: _test.go
+      linters:
+        - funlen
+        - wsl
+        - govet
+        - stylecheck
+        - dupl
+  exclude:
+    # _ instead of err checks
+    - G104
+    # for "public interface + private struct implementation" cases only!
+    - exported func .* returns unexported type .*, which can be annoying to use
+    # can be removed in the development phase
+    # - (comment on exported (method|function|type|const)|should have( a package)? comment|comment should be of the form)
+    # not for the active development - can be removed in the stable phase
+    - should have a package comment
+    - don't use an underscore in package name
+    # EXC0001 errcheck: Almost all programs ignore errs on these functions and in most cases it's ok
+    - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
+    - should check returned error before deferring
