@@ -23,3 +23,21 @@ go.work.sum
 
 # env file
 .env
+
+# Binaries
+/bin/
+/build/
+/out/
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
