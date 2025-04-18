@@ -1,5 +1,5 @@
 OUTPUT=app
-MAIN_PATH=cmd/http/main.go
+MAIN_PATH=cmd/main.go
 
 .PHONY: help
 ## prints help about all targets
@@ -24,18 +24,27 @@ help:
 		}' $(MAKEFILE_LIST)
 	@echo ""
 
+.PHONY: tidy
+## runs go mod tidy
+tidy:
+	go mod tidy
+
+.PHONY: fmt
+## runs go fmt
 fmt:
 	go fmt ./...
-.PHONY:fmt
 
+.PHONY: lint
+## runs linter
 lint: fmt
 	golangci-lint run -c .golangci.yaml
-.PHONY:lint
 
+.PHONY: vet
+## runs go vet
 vet: fmt
 	go vet ./...
-.PHONY:vet
 
+.PHONY: build
+## builds project
 build: fmt
 	go build -o $(OUTPUT) $(MAIN_PATH)
-.PHONY:build
