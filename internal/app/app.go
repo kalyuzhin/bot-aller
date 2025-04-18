@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -41,23 +42,62 @@ func Run(conf config.Config) error {
 		logger.Info("/ping",
 			zap.Any("storage", storage),
 		)
+
+		return c.Send(makePing())
+	})
+	bot.Handle("/ping_in", func(c telebot.Context) error {
+		logger.Info("/ping_in",
+			zap.Any("storage", storage),
+		)
 		msg := c.Text()
-		splitted := strings.SplitN(msg, " ", 2)
+		splitted := strings.Split(msg, " ")
+		if len(splitted) < 2 {
+			logger.Error("/ping_in")
+
+			return errors.New("invalid arguments")
+		}
 		val, err := strconv.Atoi(splitted[1])
 		if err != nil {
 			logger.Error("/ping", zap.Any("error", err))
 
 			return err
 		}
-		if len(splitted) == 2 {
-			t := time.Duration(val) * time.Minute
-			go worker(c, t)
+		t := time.Duration(val) * time.Minute
+		go workerIn(c, t)
 
-			return nil
-		}
+		return nil
 
-		return c.Send(makePing())
 	})
+	bot.Handle("/ping_at", func(c telebot.Context) error {
+		logger.Info("/ping_at",
+			zap.Any("storage", storage),
+		)
+		msg := c.Text()
+		splitted := strings.SplitN(msg, " ", 2)
+		if len(splitted) < 2 {
+			logger.Error("/ping_at")
+
+			return errors.New("invalid arguments")
+		}
+		date, err := time.Parse("2006-01-02 15:04", splitted[1])
+		if err != nil {
+			logger.Error("/ping", zap.Any("error", err))
+
+			return err
+		}
+		moscowLocation, err := time.LoadLocation("Europe/Moscow")
+		if err != nil {
+			logger.Error("/ping", zap.Any("error", err))
+
+			return err
+		}
+		dateMoscow := time.Date(date.Year(), date.Month(), date.Day(), date.Hour(), date.Minute(), 0, 0,
+			moscowLocation)
+		go workerAt(c, dateMoscow)
+
+		return nil
+	})
+	bot.Handle(telebot.OnText, func(c telebot.Context) error { return nil })
 	bot.Handle(telebot.OnUserJoined, func(c telebot.Context) error {
 		return nil
 	})
@@ -104,8 +144,24 @@ func MiddleWare(next telebot.HandlerFunc) telebot.HandlerFunc {
 	}
 }
 
-func worker(ctx telebot.Context, t time.Duration) {
+func workerIn(ctx telebot.Context, t time.Duration) {
 	ticker := time.NewTicker(t)
+	for {
+		select {
+		case <-ticker.C:
+			err := ctx.Send(makePing())
+			if err != nil {
+				logger.Error("unable to send ping", zap.Error(err))
+			}
+
+			return
+		}
+	}
+}
+
+func workerAt(ctx telebot.Context, t time.Time) {
+	duration := time.Until(t)
+	ticker := time.NewTicker(duration)
 	for {
 		select {
 		case <-ticker.C:
