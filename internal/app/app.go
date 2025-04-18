@@ -3,7 +3,9 @@ package app
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 	"gopkg.in/telebot.v4"
@@ -39,12 +41,22 @@ func Run(conf config.Config) error {
 		logger.Info("/ping",
 			zap.Any("storage", storage),
 		)
-		sb := strings.Builder{}
-		for username, _ := range storage {
-			sb.WriteString(fmt.Sprintf("@%s ", username))
+		msg := c.Text()
+		splitted := strings.SplitN(msg, " ", 2)
+		val, err := strconv.Atoi(splitted[1])
+		if err != nil {
+			logger.Error("/ping", zap.Any("error", err))
+
+			return err
+		}
+		if len(splitted) == 2 {
+			t := time.Duration(val) * time.Minute
+			go worker(c, t)
+
+			return nil
 		}
 
-		return c.Send(sb.String())
+		return c.Send(makePing())
 	})
 	bot.Handle(telebot.OnUserJoined, func(c telebot.Context) error {
 		return nil
@@ -90,4 +102,28 @@ func MiddleWare(next telebot.HandlerFunc) telebot.HandlerFunc {
 
 		return next(c)
 	}
+}
+
+func worker(ctx telebot.Context, t time.Duration) {
+	ticker := time.NewTicker(t)
+	for {
+		select {
+		case <-ticker.C:
+			err := ctx.Send(makePing())
+			if err != nil {
+				logger.Error("unable to send ping", zap.Error(err))
+			}
+
+			return
+		}
+	}
+}
+
+func makePing() string {
+	sb := strings.Builder{}
+	for username, _ := range storage {
+		sb.WriteString(fmt.Sprintf("@%s ", username))
+	}
+
+	return sb.String()
 }
