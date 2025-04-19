@@ -8,4 +8,5 @@ CREATE TABLE chats
 
 -- +goose Down
 -- +goose StatementBegin
+DROP TABLE chats;
 -- +goose StatementEnd

@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/kalyuzhin/bot-aller/internal/app"
 	"log"
 
+	"go.uber.org/zap"
+
+	app_pkg "github.com/kalyuzhin/bot-aller/internal/app"
 	"github.com/kalyuzhin/bot-aller/pkg/config"
 )
 
@@ -12,8 +14,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = app.Run(*conf)
+	logger, err := zap.NewProduction()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("unable to initialize zap logger: %v", err)
 	}
+	defer logger.Sync()
+
+	app, err := app_pkg.NewApp(logger, conf)
+	if err != nil {
+		logger.Fatal("unable to initialize app", zap.Error(err))
+	}
+
+	app.Run()
 }

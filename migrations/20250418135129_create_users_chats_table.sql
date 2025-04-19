@@ -11,4 +11,5 @@ CREATE TABLE users_chats
 
 -- +goose Down
 -- +goose StatementBegin
+DROP TABLE users_chats;
 -- +goose StatementEnd
